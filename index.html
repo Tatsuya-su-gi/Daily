@@ -21,7 +21,7 @@
   --danger:#c0392b;--danger-bg:#fdf0ee;
   --warn:#b5660f;--warn-bg:#fdf5e8;
   --ok:#2d6a3f;--ok-bg:#eef6f1;
-  --accent:#3fae84;
+  --accent:#3fae84;--accent-dark:#2d8a66;
   --radius:8px;
   --safe-top:env(safe-area-inset-top,0px);
   --safe-bottom:env(safe-area-inset-bottom,0px);
@@ -30,14 +30,24 @@ html{height:100%;overflow-y:scroll;-webkit-overflow-scrolling:touch}
 body{min-height:100%;background:var(--paper);color:var(--ink);font-family:'Noto Serif JP',serif;padding-bottom:calc(2rem + var(--safe-bottom))}
 header{
   background:var(--ink);color:var(--paper);
-  padding:calc(1rem + var(--safe-top)) 1.25rem 1rem;
+  padding:calc(1rem + var(--safe-top)) 1.25rem 0;
   position:sticky;top:0;z-index:50;
   border-bottom:3px solid var(--accent);
-  display:flex;align-items:baseline;gap:.75rem;
 }
-header h1{font-size:1.2rem;font-weight:600;letter-spacing:.08em}
-header span{font-size:.75rem;opacity:.55;letter-spacing:.04em}
+.header-top{display:flex;align-items:baseline;gap:.75rem;margin-bottom:.75rem}
+.header-top h1{font-size:1.2rem;font-weight:600;letter-spacing:.08em}
+.header-top span{font-size:.75rem;opacity:.55;letter-spacing:.04em}
+.tabs{display:flex;gap:.25rem}
+.tab{
+  flex:1;background:none;border:none;color:var(--paper);opacity:.5;
+  font-family:inherit;font-size:.82rem;padding:.6rem .3rem;cursor:pointer;
+  border-bottom:2px solid transparent;letter-spacing:.04em;
+}
+.tab.active{opacity:1;border-bottom-color:var(--accent)}
+.tab .badge{display:inline-block;background:var(--danger);color:white;font-size:.62rem;border-radius:8px;padding:.05rem .35rem;margin-left:.2rem;vertical-align:middle}
 .container{padding:1.25rem 1rem}
+.view{display:none}
+.view.active{display:block}
 
 #alert-banner{margin-bottom:1.5rem}
 .alert-section{margin-bottom:.75rem}
@@ -52,14 +62,11 @@ header span{font-size:.75rem;opacity:.55;letter-spacing:.04em}
 
 .category{margin-bottom:2rem}
 .category-header{display:flex;align-items:center;gap:.6rem;border-bottom:1.5px solid var(--border);padding-bottom:.5rem;margin-bottom:.75rem}
-.category-header h2{font-size:.95rem;font-weight:600;letter-spacing:.06em}
 .category-header .cat-icon{font-size:1rem}
+.category-header h2{font-size:.95rem;font-weight:600;letter-spacing:.06em;flex:1}
 
 .item-list{display:flex;flex-direction:column;gap:.5rem}
-.item-card{
-  background:white;border:.5px solid var(--border);border-radius:var(--radius);
-  padding:.85rem 1rem;border-left:3px solid var(--paper3);
-}
+.item-card{background:white;border:.5px solid var(--border);border-radius:var(--radius);padding:.85rem 1rem;border-left:3px solid var(--paper3)}
 .item-card.danger{border-left-color:var(--danger)}
 .item-card.warn{border-left-color:var(--warn)}
 .item-card.ok{border-left-color:var(--ok)}
@@ -67,30 +74,49 @@ header span{font-size:.75rem;opacity:.55;letter-spacing:.04em}
 .item-name{font-size:.95rem;font-weight:600;line-height:1.3}
 .item-meta{font-size:.8rem;color:var(--ink2);margin-top:.35rem}
 .item-dates{font-size:.78rem;color:var(--ink3);margin-top:.45rem;line-height:1.7}
-.item-dates .empty-date{font-size:.82rem;font-weight:600}
+.item-dates .empty-date{font-weight:600}
 .item-dates .empty-date.danger{color:var(--danger)}
 .item-dates .empty-date.warn{color:var(--warn)}
 .item-dates .empty-date.ok{color:var(--ok)}
+.item-learned{font-size:.72rem;color:var(--accent-dark);margin-top:.35rem;background:var(--ok-bg);display:inline-block;padding:.15rem .5rem;border-radius:4px}
 .edit-btn{background:none;border:.5px solid var(--border);border-radius:5px;padding:.35rem .8rem;font-size:.75rem;color:var(--ink3);cursor:pointer;font-family:inherit;min-height:36px;white-space:nowrap}
 .edit-btn:active{background:var(--paper2);color:var(--ink)}
 
-.add-btn{
-  width:100%;margin-top:.5rem;
-  background:none;border:1px dashed var(--border);border-radius:var(--radius);
-  padding:.7rem;font-size:.82rem;color:var(--ink3);cursor:pointer;font-family:inherit;min-height:44px;
+.quick-row{display:flex;align-items:center;gap:.5rem;margin-top:.7rem;padding-top:.7rem;border-top:.5px solid var(--paper3)}
+.quick-label{font-size:.72rem;color:var(--ink3);margin-right:auto}
+.quick-btn{
+  width:38px;height:38px;border-radius:8px;border:1px solid var(--border);
+  background:white;font-size:1.1rem;color:var(--ink);cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;line-height:1;
 }
-.add-btn:active{background:var(--paper2)}
+.quick-btn:active{background:var(--accent);color:white;border-color:var(--accent)}
+.quick-val{min-width:64px;text-align:center;font-size:.82rem;font-variant-numeric:tabular-nums}
 
-.fab-row{margin-top:1.5rem}
-.fab{
-  width:100%;background:var(--accent);color:white;border:none;border-radius:var(--radius);
-  padding:.85rem;font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit;min-height:50px;letter-spacing:.05em;
-}
-.fab:active{background:#2d8a66}
+.add-btn,.fab{width:100%;font-family:inherit;cursor:pointer}
+.add-btn{margin-top:.5rem;background:none;border:1px dashed var(--border);border-radius:var(--radius);padding:.6rem;font-size:.78rem;color:var(--ink3);min-height:40px}
+.add-btn:active{background:var(--paper2)}
+.fab-row{margin-top:1.5rem;display:flex;flex-direction:column;gap:.6rem}
+.fab{background:var(--accent);color:white;border:none;border-radius:var(--radius);padding:.85rem;font-size:.9rem;font-weight:600;min-height:50px;letter-spacing:.05em}
+.fab:active{background:var(--accent-dark)}
+.fab.ghost{background:none;color:var(--accent-dark);border:1px solid var(--accent)}
+.fab.ghost:active{background:var(--ok-bg)}
+
+.shop-empty{text-align:center;color:var(--ink3);font-size:.85rem;padding:3rem 1rem;line-height:1.8}
+.shop-list{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.5rem}
+.shop-item{background:white;border:.5px solid var(--border);border-radius:var(--radius);padding:.8rem 1rem;display:flex;align-items:center;gap:.8rem}
+.shop-item.checked{opacity:.5}
+.shop-item.checked .shop-name{text-decoration:line-through}
+.shop-check{width:24px;height:24px;border:2px solid var(--border);border-radius:6px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.9rem;color:white}
+.shop-check.on{background:var(--accent);border-color:var(--accent)}
+.shop-name{font-size:.9rem;font-weight:500;flex:1}
+.shop-sub{font-size:.74rem;color:var(--ink3);margin-top:.15rem}
+.shop-date{font-size:.74rem;font-weight:600}
+.shop-date.danger{color:var(--danger)}
+.shop-date.warn{color:var(--warn)}
 
 .modal-overlay{position:fixed;inset:0;background:rgba(20,18,14,.6);display:none;align-items:flex-end;justify-content:center;z-index:200}
 .modal-overlay.open{display:flex}
-.modal{background:var(--paper);border-radius:16px 16px 0 0;padding:1.5rem 1.25rem calc(1.5rem + var(--safe-bottom));width:100%;max-width:560px;border-top:1px solid var(--border);max-height:90vh;overflow-y:auto}
+.modal{background:var(--paper);border-radius:16px 16px 0 0;padding:1.5rem 1.25rem calc(1.5rem + var(--safe-bottom));width:100%;max-width:560px;border-top:1px solid var(--border);max-height:92vh;overflow-y:auto}
 .modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 1.25rem}
 .modal h3{font-size:.95rem;font-weight:600;margin-bottom:1.25rem;color:var(--ink);line-height:1.4}
 .field{margin-bottom:1rem}
@@ -98,7 +124,7 @@ header span{font-size:.75rem;opacity:.55;letter-spacing:.04em}
 .field input,.field select{width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:.6rem .8rem;font-size:1rem;font-family:inherit;background:white;color:var(--ink)}
 .field input:focus,.field select:focus{outline:none;border-color:var(--accent)}
 .field .hint{font-size:.7rem;color:var(--ink3);margin-top:.3rem}
-.modal-actions{display:flex;gap:.75rem;margin-top:1.5rem}
+.modal-actions{display:flex;gap:.75rem;margin-top:1.5rem;align-items:center}
 .btn{flex:1;padding:.7rem;border-radius:var(--radius);font-family:inherit;font-size:.9rem;cursor:pointer;border:1px solid var(--border);min-height:48px}
 .btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .btn.primary:active{background:var(--accent);border-color:var(--accent)}
@@ -106,24 +132,42 @@ header span{font-size:.75rem;opacity:.55;letter-spacing:.04em}
 .btn.ghost:active{background:var(--paper2)}
 .btn.danger-text{flex:0 0 auto;background:none;border:none;color:var(--danger);font-size:.8rem;min-height:auto;padding:.3rem}
 
+.cat-manage-item{display:flex;align-items:center;gap:.6rem;background:white;border:.5px solid var(--border);border-radius:var(--radius);padding:.6rem .8rem;margin-bottom:.5rem}
+.cat-manage-item .cm-icon{font-size:1rem}
+.cat-manage-item .cm-name{flex:1;font-size:.88rem}
+.cm-btn{background:none;border:1px solid var(--border);border-radius:6px;width:34px;height:34px;cursor:pointer;font-size:.9rem;color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.cm-btn:active{background:var(--paper2)}
+.cm-btn.del{color:var(--danger)}
+
 footer{text-align:center;font-size:.7rem;color:var(--ink3);padding:1.5rem 1rem;letter-spacing:.04em}
 </style>
 </head>
 <body>
 <header>
-  <h1>備蓄管理</h1>
-  <span>日用生活品 在庫管理</span>
+  <div class="header-top">
+    <h1>備蓄管理</h1>
+    <span>日用生活品 在庫管理</span>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-stock" onclick="switchTab('stock')">在庫</button>
+    <button class="tab" id="tab-shop" onclick="switchTab('shop')">買い物リスト<span class="badge" id="shop-badge" style="display:none">0</span></button>
+  </div>
 </header>
 
 <div class="container">
-  <div id="alert-banner"></div>
-  <div id="catalog"></div>
-  <div class="fab-row">
-    <button class="fab" onclick="openAddModal()">＋ 新しい商品を追加</button>
+  <div class="view active" id="view-stock">
+    <div id="alert-banner"></div>
+    <div id="catalog"></div>
+    <div class="fab-row">
+      <button class="fab" onclick="openAddModal()">＋ 新しい商品を追加</button>
+      <button class="fab ghost" onclick="openCatModal()">カテゴリを管理</button>
+    </div>
+  </div>
+  <div class="view" id="view-shop">
+    <div id="shop-content"></div>
   </div>
 </div>
 
-<!-- 在庫更新モーダル -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -135,6 +179,7 @@ footer{text-align:center;font-size:.7rem;color:var(--ink3);padding:1.5rem 1rem;l
     <div class="field">
       <label>月間使用量（<span id="m-unit-label2"></span>）</label>
       <input type="number" id="m-usage" min="0.01" step="0.1" inputmode="decimal">
+      <div class="hint" id="m-learned-hint"></div>
     </div>
     <div class="field">
       <label>記録日</label>
@@ -149,45 +194,34 @@ footer{text-align:center;font-size:.7rem;color:var(--ink3);padding:1.5rem 1rem;l
   </div>
 </div>
 
-<!-- 商品追加モーダル -->
 <div class="modal-overlay" id="add-modal">
   <div class="modal">
     <div class="modal-handle"></div>
     <h3>新しい商品を追加</h3>
-    <div class="field">
-      <label>カテゴリ</label>
-      <select id="a-cat"></select>
+    <div class="field"><label>カテゴリ</label><select id="a-cat"></select></div>
+    <div class="field"><label>商品名</label><input type="text" id="a-name" placeholder="例：ジェムボール"></div>
+    <div class="field"><label>単位</label>
+      <select id="a-unit"><option value="個">個</option><option value="ml">ml</option><option value="g">g</option><option value="本">本</option><option value="枚">枚</option></select>
     </div>
-    <div class="field">
-      <label>商品名</label>
-      <input type="text" id="a-name" placeholder="例：ジェムボール">
-    </div>
-    <div class="field">
-      <label>単位</label>
-      <select id="a-unit">
-        <option value="個">個</option>
-        <option value="ml">ml</option>
-        <option value="g">g</option>
-        <option value="本">本</option>
-        <option value="枚">枚</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>現在の在庫数</label>
-      <input type="number" id="a-stock" min="0" step="0.1" inputmode="decimal" placeholder="例：20">
-    </div>
-    <div class="field">
-      <label>月間使用量</label>
-      <input type="number" id="a-usage" min="0.01" step="0.1" inputmode="decimal" placeholder="例：10">
-    </div>
-    <div class="field">
-      <label>記録日</label>
-      <input type="date" id="a-date">
-      <div class="hint">在庫数を数えた日付。通常は今日のままでOK</div>
-    </div>
+    <div class="field"><label>現在の在庫数</label><input type="number" id="a-stock" min="0" step="0.1" inputmode="decimal" placeholder="例：20"></div>
+    <div class="field"><label>月間使用量</label><input type="number" id="a-usage" min="0.01" step="0.1" inputmode="decimal" placeholder="例：10"></div>
+    <div class="field"><label>記録日</label><input type="date" id="a-date"><div class="hint">在庫数を数えた日付。通常は今日のままでOK</div></div>
     <div class="modal-actions">
       <button class="btn ghost" onclick="closeAddModal()">キャンセル</button>
       <button class="btn primary" onclick="saveAddModal()">追加</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="cat-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>カテゴリを管理</h3>
+    <div id="cat-manage-list"></div>
+    <button class="add-btn" onclick="addCategory()">＋ カテゴリを追加</button>
+    <div class="hint" style="margin-top:.75rem;font-size:.7rem;color:var(--ink3)">アイコンをタップで変更、▲▼で並べ替え、✎で名前変更、🗑で削除（中の商品も削除されます）</div>
+    <div class="modal-actions">
+      <button class="btn primary" onclick="closeCatModal()">完了</button>
     </div>
   </div>
 </div>
@@ -196,72 +230,80 @@ footer{text-align:center;font-size:.7rem;color:var(--ink3);padding:1.5rem 1rem;l
 
 <script>
 const today=()=>new Date().toISOString().slice(0,10);
+const ICONS=['🧺','🛁','🍳','🧹','🧴','🪥','💊','🧻','🍽️','📦'];
 
 const DEFAULT_DATA={categories:[
   {id:'laundry',name:'洗濯関連',icon:'🧺',items:[
-    {id:'gem',name:'ジェムボール（洗濯ボール）',unit:'個',stock:54,usage:10,date:today(),note:'54個入り1パック基準'},
-    {id:'softener_peach',name:'ビーズ柔軟剤（桃）',unit:'ml',stock:520,usage:200,date:today(),note:'一人暮らし標準'},
-    {id:'softener_green',name:'ビーズ柔軟剤（緑）',unit:'ml',stock:520,usage:200,date:today(),note:'一人暮らし標準'},
-    {id:'citric_acid',name:'クエン酸',unit:'ml',stock:300,usage:60,date:today(),note:'月8回程度 すすぎ用'},
-    {id:'drum_cleaner',name:'洗濯槽クリーナー',unit:'個',stock:1,usage:0.16,date:today(),note:'月1回未満使用'},
+    {id:'gem',name:'ジェムボール（洗濯ボール）',unit:'個',stock:54,usage:10,date:today(),note:'54個入り1パック基準',prev:null},
+    {id:'softener_peach',name:'ビーズ柔軟剤（桃）',unit:'ml',stock:520,usage:200,date:today(),note:'一人暮らし標準',prev:null},
+    {id:'softener_green',name:'ビーズ柔軟剤（緑）',unit:'ml',stock:520,usage:200,date:today(),note:'一人暮らし標準',prev:null},
+    {id:'citric_acid',name:'クエン酸',unit:'ml',stock:300,usage:60,date:today(),note:'月8回程度 すすぎ用',prev:null},
+    {id:'drum_cleaner',name:'洗濯槽クリーナー',unit:'個',stock:1,usage:0.16,date:today(),note:'月1回未満使用',prev:null},
   ]},
   {id:'bath',name:'風呂関連',icon:'🛁',items:[
-    {id:'shampoo',name:'シャンプー',unit:'ml',stock:400,usage:180,date:today(),note:'ショートヘア基準 約6ml/日'},
-    {id:'body_soap',name:'ボディソープ',unit:'ml',stock:1200,usage:200,date:today(),note:'メーカー提供データより'},
-    {id:'face_wash',name:'洗顔料',unit:'ml',stock:150,usage:60,date:today(),note:'朝晩2回 約2ml/回'},
+    {id:'shampoo',name:'シャンプー',unit:'ml',stock:400,usage:180,date:today(),note:'ショートヘア基準 約6ml/日',prev:null},
+    {id:'body_soap',name:'ボディソープ',unit:'ml',stock:1200,usage:200,date:today(),note:'メーカー提供データより',prev:null},
+    {id:'face_wash',name:'洗顔料',unit:'ml',stock:150,usage:60,date:today(),note:'朝晩2回 約2ml/回',prev:null},
   ]},
   {id:'kitchen',name:'台所関連',icon:'🍳',items:[
-    {id:'mold_killer',name:'カビキラー',unit:'個',stock:1,usage:0.25,date:today(),note:'週1回浴室使用 約4本/年'},
-    {id:'bleach',name:'ハイター（台所用）',unit:'個',stock:1,usage:0.2,date:today(),note:'月4〜5回使用 約2.4本/年'},
-    {id:'dish_soap',name:'台所洗剤',unit:'ml',stock:240,usage:120,date:today(),note:'1日2回食器洗い'},
-    {id:'hand_soap',name:'ハンドソープ',unit:'ml',stock:250,usage:100,date:today(),note:'1日5〜6回使用'},
+    {id:'mold_killer',name:'カビキラー',unit:'個',stock:1,usage:0.25,date:today(),note:'週1回浴室使用 約4本/年',prev:null},
+    {id:'bleach',name:'ハイター（台所用）',unit:'個',stock:1,usage:0.2,date:today(),note:'月4〜5回使用 約2.4本/年',prev:null},
+    {id:'dish_soap',name:'台所洗剤',unit:'ml',stock:240,usage:120,date:today(),note:'1日2回食器洗い',prev:null},
+    {id:'hand_soap',name:'ハンドソープ',unit:'ml',stock:250,usage:100,date:today(),note:'1日5〜6回使用',prev:null},
   ]},
 ]};
 
-let data=JSON.parse(localStorage.getItem('inventory_v3')||'null')||DEFAULT_DATA;
+let data=JSON.parse(localStorage.getItem('inventory_v4')||'null')||DEFAULT_DATA;
+let shopChecked=JSON.parse(localStorage.getItem('shop_checked_v1')||'{}');
 let editingId=null;
 
-function save(){localStorage.setItem('inventory_v3',JSON.stringify(data))}
+function save(){localStorage.setItem('inventory_v4',JSON.stringify(data))}
+function saveShop(){localStorage.setItem('shop_checked_v1',JSON.stringify(shopChecked))}
 function findItem(id){for(const c of data.categories)for(const i of c.items)if(i.id===id)return{item:i,cat:c};return null}
 
-// 在庫切れ日 = 記録日 + (在庫 / 1日使用量) 日
 function emptyDate(item){
   const perDay=item.usage/30;
   if(perDay<=0)return null;
-  const days=item.stock/perDay;
   const base=item.date?new Date(item.date):new Date();
-  const d=new Date(base.getTime()+days*86400000);
-  return d;
+  return new Date(base.getTime()+(item.stock/perDay)*86400000);
 }
-function fmtDate(d){
-  if(!d)return'—';
-  return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
-}
-function daysUntil(d){
-  if(!d)return 9999;
-  return Math.round((d.getTime()-Date.now())/86400000);
-}
+function fmtDate(d){return d?`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`:'—'}
+function daysUntil(d){return d?Math.round((d.getTime()-Date.now())/86400000):9999}
 function statusClass(days){return days<=7?'danger':days<=20?'warn':'ok'}
+
+function learnedUsage(item){
+  if(!item.prev||item.prev.stock==null||!item.prev.date)return null;
+  const consumed=item.prev.stock-item.stock;
+  if(consumed<=0)return null;
+  const days=(new Date(item.date)-new Date(item.prev.date))/86400000;
+  if(days<3)return null;
+  return consumed/days*30;
+}
+
+function switchTab(t){
+  document.getElementById('tab-stock').classList.toggle('active',t==='stock');
+  document.getElementById('tab-shop').classList.toggle('active',t==='shop');
+  document.getElementById('view-stock').classList.toggle('active',t==='stock');
+  document.getElementById('view-shop').classList.toggle('active',t==='shop');
+  if(t==='shop')renderShop();
+}
 
 function renderAlerts(){
   const urgent=[],soon=[];
   for(const c of data.categories)for(const item of c.items){
-    const ed=emptyDate(item);
-    const du=daysUntil(ed);
+    const ed=emptyDate(item),du=daysUntil(ed);
     if(du<=7)urgent.push({item,ed});
     else if(du<=20)soon.push({item,ed});
   }
   let html='';
   if(urgent.length){
     html+=`<div class="alert-section"><h2>⚠ まもなく在庫切れ — 至急補充</h2><div class="alert-cards">`;
-    for(const{item,ed}of urgent)
-      html+=`<div class="alert-card danger"><span class="aname">${item.name}</span><span class="adate danger">${fmtDate(ed)}</span></div>`;
+    for(const{item,ed}of urgent)html+=`<div class="alert-card danger"><span class="aname">${item.name}</span><span class="adate danger">${fmtDate(ed)}</span></div>`;
     html+=`</div></div>`;
   }
   if(soon.length){
     html+=`<div class="alert-section"><h2>△ 在庫切れが近い — 補充を検討</h2><div class="alert-cards">`;
-    for(const{item,ed}of soon)
-      html+=`<div class="alert-card warn"><span class="aname">${item.name}</span><span class="adate warn">${fmtDate(ed)}</span></div>`;
+    for(const{item,ed}of soon)html+=`<div class="alert-card warn"><span class="aname">${item.name}</span><span class="adate warn">${fmtDate(ed)}</span></div>`;
     html+=`</div></div>`;
   }
   document.getElementById('alert-banner').innerHTML=html;
@@ -274,9 +316,9 @@ function renderCatalog(){
       <div class="category-header"><span class="cat-icon">${cat.icon}</span><h2>${cat.name}</h2></div>
       <div class="item-list">`;
     for(const item of cat.items){
-      const ed=emptyDate(item);
-      const du=daysUntil(ed);
-      const sc=statusClass(du);
+      const ed=emptyDate(item),du=daysUntil(ed),sc=statusClass(du);
+      const lu=learnedUsage(item);
+      const step=item.unit==='個'?1:100;
       html+=`<div class="item-card ${sc}">
         <div class="top">
           <div style="flex:1">
@@ -286,8 +328,15 @@ function renderCatalog(){
               最終記録日 ${item.date?item.date.replace(/-/g,'/'):'—'}<br>
               在庫切れ日 <span class="empty-date ${sc}">${fmtDate(ed)}</span>
             </div>
+            ${lu?`<div class="item-learned">実測ペース 約${Math.round(lu)}${item.unit}/月</div>`:''}
           </div>
           <button class="edit-btn" onclick="openModal('${item.id}')">更新</button>
+        </div>
+        <div class="quick-row">
+          <span class="quick-label">クイック調整</span>
+          <button class="quick-btn" onclick="quickAdjust('${item.id}',-${step})">−</button>
+          <span class="quick-val">${item.stock}${item.unit}</span>
+          <button class="quick-btn" onclick="quickAdjust('${item.id}',${step})">＋</button>
         </div>
       </div>`;
     }
@@ -296,9 +345,23 @@ function renderCatalog(){
   document.getElementById('catalog').innerHTML=html;
 }
 
-function render(){renderAlerts();renderCatalog()}
+function renderBadge(){
+  let n=0;
+  for(const c of data.categories)for(const item of c.items){if(daysUntil(emptyDate(item))<=20)n++}
+  const b=document.getElementById('shop-badge');
+  if(n>0){b.style.display='inline-block';b.textContent=n}else b.style.display='none';
+}
 
-// 在庫更新
+function render(){renderAlerts();renderCatalog();renderBadge()}
+
+function quickAdjust(id,delta){
+  const r=findItem(id);if(!r)return;
+  const next=Math.max(0,Math.round((r.item.stock+delta)*10)/10);
+  r.item.prev={stock:r.item.stock,date:r.item.date};
+  r.item.stock=next;r.item.date=today();
+  save();render();
+}
+
 function openModal(id){
   const r=findItem(id);if(!r)return;
   editingId=id;
@@ -308,6 +371,8 @@ function openModal(id){
   document.getElementById('m-date').value=r.item.date||today();
   document.getElementById('m-unit-label').textContent=r.item.unit;
   document.getElementById('m-unit-label2').textContent=`${r.item.unit}/月`;
+  const lu=learnedUsage(r.item);
+  document.getElementById('m-learned-hint').textContent=lu?`実測ペースは約${Math.round(lu)}${r.item.unit}/月です（参考）`:'';
   document.getElementById('modal').classList.add('open');
 }
 function closeModal(){document.getElementById('modal').classList.remove('open');editingId=null}
@@ -317,6 +382,7 @@ function saveModal(){
   const u=parseFloat(document.getElementById('m-usage').value);
   const d=document.getElementById('m-date').value||today();
   if(isNaN(s)||isNaN(u))return alert('数値を入力してください');
+  if(s!==r.item.stock){r.item.prev={stock:r.item.stock,date:r.item.date}}
   r.item.stock=s;r.item.usage=u;r.item.date=d;
   save();closeModal();render();
 }
@@ -327,7 +393,6 @@ function deleteItem(){
   save();closeModal();render();
 }
 
-// 商品追加
 function openAddModal(){
   const sel=document.getElementById('a-cat');
   sel.innerHTML=data.categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
@@ -348,14 +413,116 @@ function saveAddModal(){
   const date=document.getElementById('a-date').value||today();
   if(!name)return alert('商品名を入力してください');
   if(isNaN(stock)||isNaN(usage))return alert('在庫数と使用量を入力してください');
-  const cat=data.categories.find(c=>c.id===catId);
-  if(!cat)return;
-  cat.items.push({id:'item_'+Date.now(),name,unit,stock,usage,date,note:''});
+  const cat=data.categories.find(c=>c.id===catId);if(!cat)return;
+  cat.items.push({id:'item_'+Date.now(),name,unit,stock,usage,date,note:'',prev:null});
   save();closeAddModal();render();
+}
+
+function openCatModal(){renderCatManage();document.getElementById('cat-modal').classList.add('open')}
+function closeCatModal(){document.getElementById('cat-modal').classList.remove('open');render()}
+function renderCatManage(){
+  let html='';
+  data.categories.forEach((c,i)=>{
+    html+=`<div class="cat-manage-item">
+      <span class="cm-icon" onclick="cycleCatIcon('${c.id}')" style="cursor:pointer" title="タップでアイコン変更">${c.icon}</span>
+      <span class="cm-name">${c.name}</span>
+      <button class="cm-btn" onclick="moveCat(${i},-1)" ${i===0?'disabled style=opacity:.3':''}>▲</button>
+      <button class="cm-btn" onclick="moveCat(${i},1)" ${i===data.categories.length-1?'disabled style=opacity:.3':''}>▼</button>
+      <button class="cm-btn" onclick="renameCat('${c.id}')">✎</button>
+      <button class="cm-btn del" onclick="deleteCat('${c.id}')">🗑</button>
+    </div>`;
+  });
+  document.getElementById('cat-manage-list').innerHTML=html;
+}
+function addCategory(){
+  const name=prompt('カテゴリ名を入力してください');
+  if(!name||!name.trim())return;
+  data.categories.push({id:'cat_'+Date.now(),name:name.trim(),icon:ICONS[data.categories.length%ICONS.length],items:[]});
+  save();renderCatManage();
+}
+function renameCat(id){
+  const c=data.categories.find(x=>x.id===id);if(!c)return;
+  const name=prompt('新しいカテゴリ名',c.name);
+  if(!name||!name.trim())return;
+  c.name=name.trim();save();renderCatManage();
+}
+function cycleCatIcon(id){
+  const c=data.categories.find(x=>x.id===id);if(!c)return;
+  const idx=ICONS.indexOf(c.icon);
+  c.icon=ICONS[(idx+1)%ICONS.length];
+  save();renderCatManage();
+}
+function moveCat(i,dir){
+  const j=i+dir;
+  if(j<0||j>=data.categories.length)return;
+  [data.categories[i],data.categories[j]]=[data.categories[j],data.categories[i]];
+  save();renderCatManage();
+}
+function deleteCat(id){
+  const c=data.categories.find(x=>x.id===id);if(!c)return;
+  if(!confirm(`カテゴリ「${c.name}」を削除しますか？\n中の商品（${c.items.length}件）もすべて削除されます。`))return;
+  data.categories=data.categories.filter(x=>x.id!==id);
+  save();renderCatManage();
+}
+
+function renderShop(){
+  const list=[];
+  for(const c of data.categories)for(const item of c.items){
+    const ed=emptyDate(item),du=daysUntil(ed);
+    if(du<=20)list.push({item,cat:c,ed,du});
+  }
+  list.sort((a,b)=>a.du-b.du);
+  const el=document.getElementById('shop-content');
+  if(!list.length){
+    el.innerHTML=`<div class="shop-empty">在庫切れが近い商品はありません。<br>在庫が20日分を切ると<br>自動でここに表示されます。</div>`;
+    return;
+  }
+  let html=`<div class="shop-list">`;
+  for(const{item,cat,ed,du}of list){
+    const on=shopChecked[item.id];
+    const sc=du<=7?'danger':'warn';
+    html+=`<div class="shop-item ${on?'checked':''}">
+      <div class="shop-check ${on?'on':''}" onclick="toggleShop('${item.id}')">${on?'✓':''}</div>
+      <div style="flex:1">
+        <div class="shop-name">${item.name}</div>
+        <div class="shop-sub">${cat.icon} ${cat.name}　残り ${item.stock}${item.unit}</div>
+      </div>
+      <div class="shop-date ${sc}">${fmtDate(ed)}</div>
+    </div>`;
+  }
+  html+=`</div>
+    <div class="fab-row">
+      <button class="fab" onclick="copyShopList()">リストをコピー</button>
+      <button class="fab ghost" onclick="clearShopChecks()">チェックを全て外す</button>
+    </div>`;
+  el.innerHTML=html;
+}
+function toggleShop(id){
+  shopChecked[id]=!shopChecked[id];
+  if(!shopChecked[id])delete shopChecked[id];
+  saveShop();renderShop();
+}
+function clearShopChecks(){shopChecked={};saveShop();renderShop()}
+function copyShopList(){
+  const lines=[];
+  for(const c of data.categories)for(const item of c.items){
+    if(daysUntil(emptyDate(item))<=20 && !shopChecked[item.id])lines.push(`□ ${item.name}`);
+  }
+  if(!lines.length)return alert('コピーする商品がありません');
+  const text='【買い物リスト】\n'+lines.join('\n');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>alert('コピーしました')).catch(()=>fallbackCopy(text));
+  }else fallbackCopy(text);
+}
+function fallbackCopy(text){
+  const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');alert('コピーしました')}catch(e){alert('コピーに失敗しました')}
+  document.body.removeChild(ta);
 }
 
 document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal()});
 document.getElementById('add-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeAddModal()});
+document.getElementById('cat-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeCatModal()});
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{})});
