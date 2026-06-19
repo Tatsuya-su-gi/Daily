@@ -40,8 +40,8 @@ header{
 .tabs{display:flex;gap:.25rem}
 .tab{
   flex:1;background:none;border:none;color:var(--paper);opacity:.5;
-  font-family:inherit;font-size:.82rem;padding:.6rem .3rem;cursor:pointer;
-  border-bottom:2px solid transparent;letter-spacing:.04em;
+  font-family:inherit;font-size:.78rem;padding:.6rem .25rem;cursor:pointer;
+  border-bottom:2px solid transparent;letter-spacing:.02em;white-space:nowrap;
 }
 .tab.active{opacity:1;border-bottom-color:var(--accent)}
 .tab .badge{display:inline-block;background:var(--danger);color:white;font-size:.62rem;border-radius:8px;padding:.05rem .35rem;margin-left:.2rem;vertical-align:middle}
@@ -49,7 +49,7 @@ header{
 .view{display:none}
 .view.active{display:block}
 
-#alert-banner{margin-bottom:1.5rem}
+#alert-banner,#clean-alert{margin-bottom:1.5rem}
 .alert-section{margin-bottom:.75rem}
 .alert-section h2{font-size:.7rem;letter-spacing:.1em;color:var(--ink3);margin-bottom:.4rem}
 .alert-cards{display:flex;flex-direction:column;gap:.4rem}
@@ -91,6 +91,18 @@ header{
 }
 .quick-btn:active{background:var(--accent);color:white;border-color:var(--accent)}
 .quick-val{min-width:64px;text-align:center;font-size:.82rem;font-variant-numeric:tabular-nums}
+
+/* ===== 掃除管理 ===== */
+.next-date{font-weight:600}
+.next-date.danger{color:var(--danger)}
+.next-date.warn{color:var(--warn)}
+.next-date.ok{color:var(--ok)}
+.clean-status{font-size:.72rem;margin-top:.4rem;display:inline-block;padding:.15rem .55rem;border-radius:4px}
+.clean-status.danger{background:var(--danger-bg);color:var(--danger);font-weight:600}
+.clean-status.warn{background:var(--warn-bg);color:var(--warn);font-weight:600}
+.clean-status.ok{background:var(--ok-bg);color:var(--ok)}
+.done-btn{background:var(--accent);color:white;border:none;border-radius:6px;padding:.5rem 1rem;font-size:.82rem;cursor:pointer;font-family:inherit;min-height:38px;white-space:nowrap;font-weight:500}
+.done-btn:active{background:var(--accent-dark)}
 
 .add-btn,.fab{width:100%;font-family:inherit;cursor:pointer}
 .add-btn{margin-top:.5rem;background:none;border:1px dashed var(--border);border-radius:var(--radius);padding:.6rem;font-size:.78rem;color:var(--ink3);min-height:40px}
@@ -151,6 +163,7 @@ footer{text-align:center;font-size:.7rem;color:var(--ink3);padding:1.5rem 1rem;l
   <div class="tabs">
     <button class="tab active" id="tab-stock" onclick="switchTab('stock')">在庫</button>
     <button class="tab" id="tab-shop" onclick="switchTab('shop')">買い物リスト<span class="badge" id="shop-badge" style="display:none">0</span></button>
+    <button class="tab" id="tab-clean" onclick="switchTab('clean')">掃除管理<span class="badge" id="clean-badge" style="display:none">0</span></button>
   </div>
 </header>
 
@@ -165,6 +178,13 @@ footer{text-align:center;font-size:.7rem;color:var(--ink3);padding:1.5rem 1rem;l
   </div>
   <div class="view" id="view-shop">
     <div id="shop-content"></div>
+  </div>
+  <div class="view" id="view-clean">
+    <div id="clean-alert"></div>
+    <div id="clean-list"></div>
+    <div class="fab-row">
+      <button class="fab" onclick="openAddClean()">＋ 掃除場所を追加</button>
+    </div>
   </div>
 </div>
 
@@ -226,6 +246,21 @@ footer{text-align:center;font-size:.7rem;color:var(--ink3);padding:1.5rem 1rem;l
   </div>
 </div>
 
+<div class="modal-overlay" id="clean-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3 id="clean-modal-title">掃除場所を追加</h3>
+    <div class="field"><label>掃除場所</label><input type="text" id="c-name" placeholder="例：トイレ"></div>
+    <div class="field"><label>掃除した日</label><input type="date" id="c-date"></div>
+    <div class="field"><label>推奨掃除間隔（日）</label><input type="number" id="c-interval" min="1" step="1" inputmode="numeric" placeholder="例：7"><div class="hint">この日数ごとに掃除する目安。掃除した日からの経過で次回掃除予定日を自動計算します</div></div>
+    <div class="modal-actions">
+      <button class="btn danger-text" id="c-delete-btn" onclick="deleteClean()">削除</button>
+      <button class="btn ghost" onclick="closeCleanModal()">キャンセル</button>
+      <button class="btn primary" onclick="saveCleanModal()">保存</button>
+    </div>
+  </div>
+</div>
+
 <footer>データはこの端末のローカルストレージに保存されます</footer>
 
 <script>
@@ -253,13 +288,26 @@ const DEFAULT_DATA={categories:[
   ]},
 ]};
 
+const DEFAULT_CLEAN={places:[
+  {id:'toilet',name:'トイレ',interval:3,date:today(),note:''},
+  {id:'bathroom',name:'風呂場',interval:3,date:today(),note:''},
+  {id:'sink',name:'シンク',interval:1,date:today(),note:''},
+  {id:'stove',name:'コンロ回り',interval:3,date:today(),note:''},
+  {id:'underbed',name:'ベッドの下',interval:14,date:today(),note:''},
+  {id:'floor',name:'部屋の床全体',interval:7,date:today(),note:''},
+]};
+
 let data=JSON.parse(localStorage.getItem('inventory_v4')||'null')||DEFAULT_DATA;
 let shopChecked=JSON.parse(localStorage.getItem('shop_checked_v1')||'{}');
+let cleanData=JSON.parse(localStorage.getItem('cleaning_v1')||'null')||DEFAULT_CLEAN;
 let editingId=null;
+let editingCleanId=null;
 
 function save(){localStorage.setItem('inventory_v4',JSON.stringify(data))}
 function saveShop(){localStorage.setItem('shop_checked_v1',JSON.stringify(shopChecked))}
+function saveClean(){localStorage.setItem('cleaning_v1',JSON.stringify(cleanData))}
 function findItem(id){for(const c of data.categories)for(const i of c.items)if(i.id===id)return{item:i,cat:c};return null}
+function findPlace(id){return cleanData.places.find(p=>p.id===id)||null}
 
 function emptyDate(item){
   const perDay=item.usage/30;
@@ -283,9 +331,12 @@ function learnedUsage(item){
 function switchTab(t){
   document.getElementById('tab-stock').classList.toggle('active',t==='stock');
   document.getElementById('tab-shop').classList.toggle('active',t==='shop');
+  document.getElementById('tab-clean').classList.toggle('active',t==='clean');
   document.getElementById('view-stock').classList.toggle('active',t==='stock');
   document.getElementById('view-shop').classList.toggle('active',t==='shop');
+  document.getElementById('view-clean').classList.toggle('active',t==='clean');
   if(t==='shop')renderShop();
+  if(t==='clean')renderClean();
 }
 
 function renderAlerts(){
@@ -352,7 +403,7 @@ function renderBadge(){
   if(n>0){b.style.display='inline-block';b.textContent=n}else b.style.display='none';
 }
 
-function render(){renderAlerts();renderCatalog();renderBadge()}
+function render(){renderAlerts();renderCatalog();renderBadge();renderCleanBadge()}
 
 function quickAdjust(id,delta){
   const r=findItem(id);if(!r)return;
@@ -520,9 +571,119 @@ function fallbackCopy(text){
   document.body.removeChild(ta);
 }
 
+/* ===== 掃除管理 ===== */
+function nextCleanDate(p){
+  if(!p.date)return null;
+  const base=new Date(p.date);
+  return new Date(base.getTime()+(p.interval||1)*86400000);
+}
+function cleanStatus(p){
+  const nd=nextCleanDate(p);
+  const dl=daysUntil(nd);
+  const warnT=Math.round((p.interval||1)*0.3);
+  let cls,label;
+  if(dl<=0){cls='danger';label=dl<0?`${-dl}日超過 — 要掃除`:'今日が予定日 — 要掃除';}
+  else if(warnT>=1 && dl<=warnT){cls='warn';label=`あと${dl}日`;}
+  else{cls='ok';label=`あと${dl}日`;}
+  return{nd,dl,cls,label};
+}
+function renderCleanAlert(){
+  const due=cleanData.places.map(p=>({p,...cleanStatus(p)})).filter(x=>x.cls==='danger');
+  let html='';
+  if(due.length){
+    html+=`<div class="alert-section"><h2>🧹 掃除が必要な場所</h2><div class="alert-cards">`;
+    for(const{p,nd}of due)html+=`<div class="alert-card danger"><span class="aname">${p.name}</span><span class="adate danger">予定 ${fmtDate(nd)}</span></div>`;
+    html+=`</div></div>`;
+  }
+  document.getElementById('clean-alert').innerHTML=html;
+}
+function renderCleanList(){
+  if(!cleanData.places.length){
+    document.getElementById('clean-list').innerHTML=`<div class="shop-empty">掃除場所が登録されていません。<br>下のボタンから追加できます。</div>`;
+    return;
+  }
+  let html='<div class="item-list">';
+  for(const p of cleanData.places){
+    const{nd,cls,label}=cleanStatus(p);
+    html+=`<div class="item-card ${cls}">
+      <div class="top">
+        <div style="flex:1">
+          <div class="item-name">${p.name}</div>
+          <div class="item-meta">推奨掃除間隔 ${p.interval}日ごと</div>
+          <div class="item-dates">
+            掃除した日 ${p.date?p.date.replace(/-/g,'/'):'—'}<br>
+            次回掃除予定日 <span class="next-date ${cls}">${fmtDate(nd)}</span>
+          </div>
+          <div class="clean-status ${cls}">${label}</div>
+        </div>
+        <button class="edit-btn" onclick="openCleanModal('${p.id}')">編集</button>
+      </div>
+      <div class="quick-row">
+        <span class="quick-label">掃除を記録</span>
+        <button class="done-btn" onclick="markCleaned('${p.id}')">今日 掃除した</button>
+      </div>
+    </div>`;
+  }
+  html+='</div>';
+  document.getElementById('clean-list').innerHTML=html;
+}
+function renderCleanBadge(){
+  const n=cleanData.places.filter(p=>cleanStatus(p).cls==='danger').length;
+  const b=document.getElementById('clean-badge');
+  if(n>0){b.style.display='inline-block';b.textContent=n}else b.style.display='none';
+}
+function renderClean(){renderCleanAlert();renderCleanList();renderCleanBadge()}
+
+function markCleaned(id){
+  const p=findPlace(id);if(!p)return;
+  p.date=today();saveClean();renderClean();
+}
+function openCleanModal(id){
+  const p=findPlace(id);if(!p)return;
+  editingCleanId=id;
+  document.getElementById('clean-modal-title').textContent=p.name;
+  document.getElementById('c-name').value=p.name;
+  document.getElementById('c-date').value=p.date||today();
+  document.getElementById('c-interval').value=p.interval;
+  document.getElementById('c-delete-btn').style.display='';
+  document.getElementById('clean-modal').classList.add('open');
+}
+function openAddClean(){
+  editingCleanId=null;
+  document.getElementById('clean-modal-title').textContent='掃除場所を追加';
+  document.getElementById('c-name').value='';
+  document.getElementById('c-date').value=today();
+  document.getElementById('c-interval').value='';
+  document.getElementById('c-delete-btn').style.display='none';
+  document.getElementById('clean-modal').classList.add('open');
+}
+function closeCleanModal(){document.getElementById('clean-modal').classList.remove('open');editingCleanId=null}
+function saveCleanModal(){
+  const name=document.getElementById('c-name').value.trim();
+  const date=document.getElementById('c-date').value||today();
+  const interval=parseInt(document.getElementById('c-interval').value,10);
+  if(!name)return alert('掃除場所を入力してください');
+  if(isNaN(interval)||interval<1)return alert('推奨掃除間隔は1以上の数値を入力してください');
+  if(editingCleanId){
+    const p=findPlace(editingCleanId);if(!p)return;
+    p.name=name;p.date=date;p.interval=interval;
+  }else{
+    cleanData.places.push({id:'place_'+Date.now(),name,interval,date,note:''});
+  }
+  saveClean();closeCleanModal();renderClean();
+}
+function deleteClean(){
+  if(!editingCleanId)return;
+  const p=findPlace(editingCleanId);if(!p)return;
+  if(!confirm(`「${p.name}」を削除しますか？`))return;
+  cleanData.places=cleanData.places.filter(x=>x.id!==editingCleanId);
+  saveClean();closeCleanModal();renderClean();
+}
+
 document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal()});
 document.getElementById('add-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeAddModal()});
 document.getElementById('cat-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeCatModal()});
+document.getElementById('clean-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeCleanModal()});
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{})});

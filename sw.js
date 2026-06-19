@@ -1,4 +1,4 @@
-const CACHE = 'bichiku-v2';
+const CACHE = 'bichiku-v3';
 const ASSETS = [
   './index.html',
   './manifest.json',
