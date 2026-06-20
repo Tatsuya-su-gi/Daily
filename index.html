@@ -8,11 +8,11 @@
 <meta name="apple-mobile-web-app-title" content="備蓄管理">
 <meta name="theme-color" content="#1a1a18">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.svg">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>備蓄管理</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -152,6 +152,38 @@ header{
 .cm-btn.del{color:var(--danger)}
 
 footer{text-align:center;font-size:.7rem;color:var(--ink3);padding:1.5rem 1rem;letter-spacing:.04em}
+
+/* ===== 追加：柔らかいヘッダーフォント・画面別背景・ホーム・履歴 ===== */
+:root{--font-soft:'Zen Maru Gothic','Noto Serif JP',sans-serif}
+.header-top h1{font-family:var(--font-soft)}
+.header-top span{font-family:var(--font-soft)}
+.tab{font-family:var(--font-soft);font-size:.7rem;padding:.55rem .15rem;letter-spacing:0}
+
+body{transition:background .3s ease}
+body.app-home{background:#f7f5ef}
+body.app-history{background:#f7f5ef}
+body.app-stock{background:linear-gradient(180deg,#f1f9fd 0%,#e1eff9 100%)}
+body.app-shop{background:linear-gradient(180deg,#fdfbf2 0%,#f6ebc6 100%)}
+body.app-clean{background:linear-gradient(180deg,#eef8f1 0%,#ddf0e5 100%)}
+
+.home-greeting{margin-bottom:1.25rem}
+.home-greeting h2{font-family:var(--font-soft);font-size:1.1rem;font-weight:700;letter-spacing:.04em}
+.home-greeting .home-date{font-size:.75rem;color:var(--ink3);margin-top:.25rem}
+.home-empty{text-align:center;color:var(--ink2);font-size:.9rem;padding:2.25rem 1rem;line-height:1.9;background:white;border:.5px solid var(--border);border-radius:var(--radius)}
+.home-actions{display:flex;align-items:center;gap:.6rem}
+.home-done{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:.3rem .75rem;font-size:.74rem;font-family:inherit;cursor:pointer;min-height:32px;white-space:nowrap}
+.home-done:active{background:var(--accent-dark)}
+
+.back-btn{background:white;border:.5px solid var(--border);border-radius:6px;padding:.45rem .9rem;font-size:.8rem;color:var(--ink2);font-family:inherit;cursor:pointer;margin-bottom:1.25rem;min-height:38px}
+.back-btn:active{background:var(--paper2)}
+.hist-section{margin-bottom:2rem}
+.hist-section>h2{font-family:var(--font-soft);font-size:.95rem;font-weight:700;letter-spacing:.04em;border-bottom:1.5px solid var(--border);padding-bottom:.5rem;margin-bottom:.85rem}
+.hist-card{background:white;border:.5px solid var(--border);border-radius:var(--radius);padding:.85rem 1rem;margin-bottom:.6rem}
+.hist-card .hc-name{font-size:.9rem;font-weight:600}
+.hist-card .hc-meta{font-size:.74rem;color:var(--ink3);margin-top:.25rem;line-height:1.6}
+.hist-chart{margin-top:.6rem}
+.bar-track{height:9px;background:var(--paper3);border-radius:5px;overflow:hidden;margin-top:.25rem}
+.bar-fill{height:100%;border-radius:5px}
 </style>
 </head>
 <body>
@@ -161,14 +193,18 @@ footer{text-align:center;font-size:.7rem;color:var(--ink3);padding:1.5rem 1rem;l
     <span>日用生活品 在庫管理</span>
   </div>
   <div class="tabs">
-    <button class="tab active" id="tab-stock" onclick="switchTab('stock')">在庫</button>
+    <button class="tab active" id="tab-home" onclick="switchTab('home')">ホーム</button>
+    <button class="tab" id="tab-stock" onclick="switchTab('stock')">在庫</button>
     <button class="tab" id="tab-shop" onclick="switchTab('shop')">買い物リスト<span class="badge" id="shop-badge" style="display:none">0</span></button>
     <button class="tab" id="tab-clean" onclick="switchTab('clean')">掃除管理<span class="badge" id="clean-badge" style="display:none">0</span></button>
   </div>
 </header>
 
 <div class="container">
-  <div class="view active" id="view-stock">
+  <div class="view active" id="view-home">
+    <div id="home-content"></div>
+  </div>
+  <div class="view" id="view-stock">
     <div id="alert-banner"></div>
     <div id="catalog"></div>
     <div class="fab-row">
@@ -185,6 +221,10 @@ footer{text-align:center;font-size:.7rem;color:var(--ink3);padding:1.5rem 1rem;l
     <div class="fab-row">
       <button class="fab" onclick="openAddClean()">＋ 掃除場所を追加</button>
     </div>
+  </div>
+  <div class="view" id="view-history">
+    <button class="back-btn" onclick="switchTab('home')">← ホームに戻る</button>
+    <div id="history-content"></div>
   </div>
 </div>
 
@@ -291,7 +331,7 @@ const DEFAULT_DATA={categories:[
 const DEFAULT_CLEAN={places:[
   {id:'toilet',name:'トイレ',interval:3,date:today(),note:''},
   {id:'bathroom',name:'風呂場',interval:3,date:today(),note:''},
-  {id:'sink',name:'シンク',interval:1,date:today(),note:''},
+  {id:'sink',name:'シンク',interval:2,date:today(),note:''},
   {id:'stove',name:'コンロ回り',interval:3,date:today(),note:''},
   {id:'underbed',name:'ベッドの下',interval:14,date:today(),note:''},
   {id:'floor',name:'部屋の床全体',interval:7,date:today(),note:''},
@@ -308,6 +348,32 @@ function saveShop(){localStorage.setItem('shop_checked_v1',JSON.stringify(shopCh
 function saveClean(){localStorage.setItem('cleaning_v1',JSON.stringify(cleanData))}
 function findItem(id){for(const c of data.categories)for(const i of c.items)if(i.id===id)return{item:i,cat:c};return null}
 function findPlace(id){return cleanData.places.find(p=>p.id===id)||null}
+
+function normalize(){
+  let changed=false;
+  for(const c of data.categories)for(const it of c.items){
+    if(!Array.isArray(it.history)){it.history=[];changed=true}
+    if(it.history.length===0){it.history.push({d:it.date||today(),s:it.stock});changed=true}
+  }
+  for(const p of cleanData.places){
+    if(!Array.isArray(p.history)){p.history=[];changed=true}
+    if(p.history.length===0){p.history.push(p.date||today());changed=true}
+  }
+  if(changed){save();saveClean()}
+}
+function pushItemHistory(it){
+  if(!Array.isArray(it.history))it.history=[];
+  const d=it.date||today();
+  const last=it.history[it.history.length-1];
+  if(last&&last.d===d)last.s=it.stock; else it.history.push({d,s:it.stock});
+  if(it.history.length>60)it.history=it.history.slice(-60);
+}
+function pushPlaceHistory(p){
+  if(!Array.isArray(p.history))p.history=[];
+  const d=p.date||today();
+  if(p.history[p.history.length-1]!==d)p.history.push(d);
+  if(p.history.length>40)p.history=p.history.slice(-40);
+}
 
 function emptyDate(item){
   const perDay=item.usage/30;
@@ -329,14 +395,13 @@ function learnedUsage(item){
 }
 
 function switchTab(t){
-  document.getElementById('tab-stock').classList.toggle('active',t==='stock');
-  document.getElementById('tab-shop').classList.toggle('active',t==='shop');
-  document.getElementById('tab-clean').classList.toggle('active',t==='clean');
-  document.getElementById('view-stock').classList.toggle('active',t==='stock');
-  document.getElementById('view-shop').classList.toggle('active',t==='shop');
-  document.getElementById('view-clean').classList.toggle('active',t==='clean');
+  ['home','stock','shop','clean'].forEach(x=>{const tb=document.getElementById('tab-'+x);if(tb)tb.classList.toggle('active',x===t)});
+  ['home','stock','shop','clean','history'].forEach(x=>{const v=document.getElementById('view-'+x);if(v)v.classList.toggle('active',x===t)});
+  document.body.className='app-'+(t==='history'?'history':t);
+  if(t==='home')renderHome();
   if(t==='shop')renderShop();
   if(t==='clean')renderClean();
+  if(t==='history')renderHistory();
 }
 
 function renderAlerts(){
@@ -403,13 +468,14 @@ function renderBadge(){
   if(n>0){b.style.display='inline-block';b.textContent=n}else b.style.display='none';
 }
 
-function render(){renderAlerts();renderCatalog();renderBadge();renderCleanBadge()}
+function render(){renderAlerts();renderCatalog();renderBadge();renderCleanBadge();renderHome()}
 
 function quickAdjust(id,delta){
   const r=findItem(id);if(!r)return;
   const next=Math.max(0,Math.round((r.item.stock+delta)*10)/10);
   r.item.prev={stock:r.item.stock,date:r.item.date};
   r.item.stock=next;r.item.date=today();
+  pushItemHistory(r.item);
   save();render();
 }
 
@@ -435,6 +501,7 @@ function saveModal(){
   if(isNaN(s)||isNaN(u))return alert('数値を入力してください');
   if(s!==r.item.stock){r.item.prev={stock:r.item.stock,date:r.item.date}}
   r.item.stock=s;r.item.usage=u;r.item.date=d;
+  pushItemHistory(r.item);
   save();closeModal();render();
 }
 function deleteItem(){
@@ -465,7 +532,8 @@ function saveAddModal(){
   if(!name)return alert('商品名を入力してください');
   if(isNaN(stock)||isNaN(usage))return alert('在庫数と使用量を入力してください');
   const cat=data.categories.find(c=>c.id===catId);if(!cat)return;
-  cat.items.push({id:'item_'+Date.now(),name,unit,stock,usage,date,note:'',prev:null});
+  cat.items.push({id:'item_'+Date.now(),name,unit,stock,usage,date,note:'',prev:null,history:[]});
+  pushItemHistory(cat.items[cat.items.length-1]);
   save();closeAddModal();render();
 }
 
@@ -636,7 +704,7 @@ function renderClean(){renderCleanAlert();renderCleanList();renderCleanBadge()}
 
 function markCleaned(id){
   const p=findPlace(id);if(!p)return;
-  p.date=today();saveClean();renderClean();
+  p.date=today();pushPlaceHistory(p);saveClean();renderClean();renderHome();
 }
 function openCleanModal(id){
   const p=findPlace(id);if(!p)return;
@@ -667,17 +735,19 @@ function saveCleanModal(){
   if(editingCleanId){
     const p=findPlace(editingCleanId);if(!p)return;
     p.name=name;p.date=date;p.interval=interval;
+    pushPlaceHistory(p);
   }else{
-    cleanData.places.push({id:'place_'+Date.now(),name,interval,date,note:''});
+    cleanData.places.push({id:'place_'+Date.now(),name,interval,date,note:'',history:[]});
+    pushPlaceHistory(cleanData.places[cleanData.places.length-1]);
   }
-  saveClean();closeCleanModal();renderClean();
+  saveClean();closeCleanModal();renderClean();renderHome();
 }
 function deleteClean(){
   if(!editingCleanId)return;
   const p=findPlace(editingCleanId);if(!p)return;
   if(!confirm(`「${p.name}」を削除しますか？`))return;
   cleanData.places=cleanData.places.filter(x=>x.id!==editingCleanId);
-  saveClean();closeCleanModal();renderClean();
+  saveClean();closeCleanModal();renderClean();renderHome();
 }
 
 document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal()});
@@ -685,11 +755,123 @@ document.getElementById('add-modal').addEventListener('click',e=>{if(e.target===
 document.getElementById('cat-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeCatModal()});
 document.getElementById('clean-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeCleanModal()});
 
+/* ===== ホーム（今日やること） ===== */
+function homeRestock(){
+  const urgent=[],soon=[];
+  for(const c of data.categories)for(const it of c.items){
+    const ed=emptyDate(it),du=daysUntil(ed);
+    if(du<=7)urgent.push({it,ed}); else if(du<=20)soon.push({it,ed});
+  }
+  return{urgent,soon};
+}
+function homeClean(){
+  const due=[],near=[];
+  for(const p of cleanData.places){
+    const s=cleanStatus(p);
+    if(s.cls==='danger')due.push({p,s}); else if(s.cls==='warn')near.push({p,s});
+  }
+  return{due,near};
+}
+function renderHome(){
+  const {urgent,soon}=homeRestock();
+  const {due,near}=homeClean();
+  const total=urgent.length+soon.length+due.length+near.length;
+  let html=`<div class="home-greeting"><h2>今日のやること</h2><div class="home-date">${fmtDate(new Date())}</div></div>`;
+  if(!total){
+    html+=`<div class="home-empty">今日やるべきことはありません。<br>在庫の補充も掃除も問題なしです。</div>`;
+  }else{
+    if(urgent.length||soon.length){
+      html+=`<div class="alert-section"><h2>🛒 補充が必要な在庫</h2><div class="alert-cards">`;
+      for(const{it,ed}of urgent)html+=`<div class="alert-card danger"><span class="aname">${it.name}</span><span class="adate danger">${fmtDate(ed)}</span></div>`;
+      for(const{it,ed}of soon)html+=`<div class="alert-card warn"><span class="aname">${it.name}</span><span class="adate warn">${fmtDate(ed)}</span></div>`;
+      html+=`</div></div>`;
+    }
+    if(due.length||near.length){
+      html+=`<div class="alert-section"><h2>🧹 掃除が必要な場所</h2><div class="alert-cards">`;
+      for(const{p,s}of due)html+=`<div class="alert-card danger"><span class="aname">${p.name}</span><span class="home-actions"><span class="adate danger">${fmtDate(s.nd)}</span><button class="home-done" onclick="markCleanedHome('${p.id}')">済</button></span></div>`;
+      for(const{p,s}of near)html+=`<div class="alert-card warn"><span class="aname">${p.name}</span><span class="home-actions"><span class="adate warn">${fmtDate(s.nd)}</span><button class="home-done" onclick="markCleanedHome('${p.id}')">済</button></span></div>`;
+      html+=`</div></div>`;
+    }
+  }
+  html+=`<div class="fab-row"><button class="fab ghost" onclick="switchTab('history')">📊 履歴・グラフを見る</button></div>`;
+  document.getElementById('home-content').innerHTML=html;
+}
+function markCleanedHome(id){
+  const p=findPlace(id);if(!p)return;
+  p.date=today();pushPlaceHistory(p);saveClean();render();renderClean();
+}
+
+/* ===== 履歴・グラフ ===== */
+function svgLine(pts,w,h,color){
+  if(pts.length<2)return '<div class="hc-meta">記録が2回以上たまると、ここにグラフが表示されます。</div>';
+  const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);
+  const mnX=Math.min(...xs),mxX=Math.max(...xs),mnY=Math.min(...ys),mxY=Math.max(...ys);
+  const pad=10;
+  const sx=v=>pad+(mxX===mnX?0:(v-mnX)/(mxX-mnX))*(w-2*pad);
+  const sy=v=>h-pad-(mxY===mnY?(h-2*pad)/2:(v-mnY)/(mxY-mnY)*(h-2*pad));
+  let line='';
+  pts.forEach((p,i)=>{line+=(i?'L':'M')+sx(p.x).toFixed(1)+' '+sy(p.y).toFixed(1)+' '});
+  let area=`M${sx(pts[0].x).toFixed(1)} ${(h-pad).toFixed(1)} `;
+  pts.forEach(p=>{area+='L'+sx(p.x).toFixed(1)+' '+sy(p.y).toFixed(1)+' '});
+  area+=`L${sx(pts[pts.length-1].x).toFixed(1)} ${(h-pad).toFixed(1)} Z`;
+  let dots='';
+  pts.forEach(p=>{dots+=`<circle cx="${sx(p.x).toFixed(1)}" cy="${sy(p.y).toFixed(1)}" r="2.5" fill="${color}"/>`});
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none" style="display:block">`
+    +`<path d="${area}" fill="${color}" opacity="0.12"/>`
+    +`<path d="${line}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`
+    +dots+`</svg>`;
+}
+function renderHistory(){
+  let html='<div class="hist-section"><h2>📦 在庫の消費推移</h2>';
+  let any=false;
+  for(const c of data.categories)for(const it of c.items){
+    const hist=it.history||[];
+    if(hist.length<2)continue;
+    any=true;
+    const pts=hist.map(e=>({x:new Date(e.d).getTime(),y:e.s}));
+    const first=hist[0],last=hist[hist.length-1];
+    const days=(new Date(last.d)-new Date(first.d))/86400000;
+    const consumed=first.s-last.s;
+    const pace=(days>=1&&consumed>0)?Math.round(consumed/days*30):null;
+    html+=`<div class="hist-card">
+      <div class="hc-name">${it.name}</div>
+      <div class="hc-meta">${first.d.replace(/-/g,'/')} 〜 ${last.d.replace(/-/g,'/')}　記録${hist.length}回${pace?`　実測ペース 約${pace}${it.unit}/月`:''}</div>
+      <div class="hist-chart">${svgLine(pts,300,72,'#2d8a66')}</div>
+    </div>`;
+  }
+  if(!any)html+=`<div class="home-empty">在庫を数回更新すると、消費の推移がグラフで表示されます。</div>`;
+  html+='</div><div class="hist-section"><h2>🧹 掃除間隔の実績</h2>';
+  let any2=false;
+  for(const p of cleanData.places){
+    const h=p.history||[];
+    if(h.length<2)continue;
+    any2=true;
+    const gaps=[];for(let i=1;i<h.length;i++)gaps.push((new Date(h[i])-new Date(h[i-1]))/86400000);
+    const avg=Math.round(gaps.reduce((a,b)=>a+b,0)/gaps.length);
+    const rec=p.interval,maxV=Math.max(avg,rec,1);
+    html+=`<div class="hist-card">
+      <div class="hc-name">${p.name}</div>
+      <div class="hc-meta">掃除${h.length}回　平均間隔 ${avg}日（推奨 ${rec}日）</div>
+      <div class="hist-chart">
+        <div class="hc-meta">実測 ${avg}日</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(avg/maxV*100)}%;background:#2d8a66"></div></div>
+        <div class="hc-meta" style="margin-top:.45rem">推奨 ${rec}日</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(rec/maxV*100)}%;background:#b5660f"></div></div>
+      </div>
+    </div>`;
+  }
+  if(!any2)html+=`<div class="home-empty">掃除を数回記録すると、実際の掃除間隔が表示されます。</div>`;
+  html+='</div>';
+  document.getElementById('history-content').innerHTML=html;
+}
+
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{})});
 }
 
+normalize();
 render();
+document.body.className='app-home';
 </script>
 </body>
 </html>
